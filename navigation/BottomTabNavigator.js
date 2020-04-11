@@ -25,7 +25,7 @@ export default function BottomTabNavigator({ navigation, route }) {
         options={{
           title: "Indices",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="md-code-working" />
+            <TabBarIcon focused={focused} name="md-trending-up" />
           ),
         }}
       />
@@ -35,7 +35,7 @@ export default function BottomTabNavigator({ navigation, route }) {
         options={{
           title: "Funds",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="md-book" />
+            <TabBarIcon focused={focused} name="md-wallet" />
           ),
         }}
       />
@@ -45,7 +45,7 @@ export default function BottomTabNavigator({ navigation, route }) {
         options={{
           title: "Accounts",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="md-book" />
+            <TabBarIcon focused={focused} name="md-card" />
           ),
         }}
       />
@@ -55,7 +55,7 @@ export default function BottomTabNavigator({ navigation, route }) {
         options={{
           title: "Resources",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="md-book" />
+            <TabBarIcon focused={focused} name="md-navigate" />
           ),
         }}
       />
@@ -65,7 +65,7 @@ export default function BottomTabNavigator({ navigation, route }) {
         options={{
           title: "News",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="md-book" />
+            <TabBarIcon focused={focused} name="md-bookmark" />
           ),
         }}
       />
