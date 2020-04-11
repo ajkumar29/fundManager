@@ -4,6 +4,9 @@ import * as React from "react";
 import TabBarIcon from "../components/TabBarIcon";
 import HomeScreen from "../screens/HomeScreen";
 import LinksScreen from "../screens/LinksScreen";
+import AccountsScreen from "../screens/AccountsScreen";
+import FundsScreen from "../screens/FundsScreen";
+import NewsScreen from "../screens/NewsScreen";
 
 const BottomTab = createBottomTabNavigator();
 const INITIAL_ROUTE_NAME = "Home";
@@ -28,7 +31,7 @@ export default function BottomTabNavigator({ navigation, route }) {
       />
       <BottomTab.Screen
         name="Funds"
-        component={LinksScreen}
+        component={FundsScreen}
         options={{
           title: "Funds",
           tabBarIcon: ({ focused }) => (
@@ -38,7 +41,7 @@ export default function BottomTabNavigator({ navigation, route }) {
       />
       <BottomTab.Screen
         name="Accounts"
-        component={LinksScreen}
+        component={AccountsScreen}
         options={{
           title: "Accounts",
           tabBarIcon: ({ focused }) => (
@@ -58,7 +61,7 @@ export default function BottomTabNavigator({ navigation, route }) {
       />
       <BottomTab.Screen
         name="News"
-        component={LinksScreen}
+        component={NewsScreen}
         options={{
           title: "News",
           tabBarIcon: ({ focused }) => (
