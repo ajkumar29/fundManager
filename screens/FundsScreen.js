@@ -1,20 +1,17 @@
 import * as WebBrowser from "expo-web-browser";
 import React, { useState, useEffect } from "react";
 import {
-  Image,
-  Platform,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  Text,
+  TouchableNativeFeedback,
 } from "react-native";
-import { Input, Icon, ListItem } from "react-native-elements";
+import { Input, Icon, Overlay, Card } from "react-native-elements";
 import Constants from "expo-constants";
 
-import { MonoText } from "../components/StyledText";
 import axios from "axios";
 
 export default function FundScreen() {
@@ -22,6 +19,7 @@ export default function FundScreen() {
   const [urlList, setUrlList] = useState([]);
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   async function getFund(link) {
     const fund = await axios("https://still-atoll-20317.herokuapp.com/fund", {
@@ -61,31 +59,47 @@ export default function FundScreen() {
     }
   }, [urlList]);
 
-  // useEffect(() => {
-  //   let newData = [...data];
-  //   for (let url in urlList) {
-  //     getFund(url)
-  //       .then((res) => {
-  //         newData.push(res);
-  //       })
-  //       .catch((err) => console.log(err));
-  //   }
-  //   setData(newData);
-  // }, []);
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {isLoading && <ActivityIndicator size="large" color="#0000ff" />}
-        {data.map((d, i) => (
-          <View key={i}>
-            <ListItem
-              title={d.name}
-              subtitle={"Buy price: " + d.buyPrice}
-              bottomDivider
-            />
-          </View>
-        ))}
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          data.map((d, i) => (
+            <TouchableNativeFeedback onPress={() => setIsOpen(true)} key={i}>
+              <View>
+                <Overlay
+                  isVisible={isOpen}
+                  onBackdropPress={() => setIsOpen(false)}
+                >
+                  <ScrollView>
+                    <Text>{JSON.stringify(d.holdings)}</Text>
+                  </ScrollView>
+                </Overlay>
+                <Card title={d.name} titleStyle={styles.titleStyle}>
+                  <Text
+                    style={
+                      d.changeDirection === "-"
+                        ? styles.textPriceDown
+                        : styles.textPriceUp
+                    }
+                  >
+                    Buy Price: {d.buyPrice}
+                  </Text>
+                  <Text
+                    style={
+                      d.changeDirection === "-"
+                        ? styles.textPriceDown
+                        : styles.textPriceUp
+                    }
+                  >
+                    {`Change: ${d.changeDirection}${d.changeP} (${d.changeDirection}${d.changePc})`}
+                  </Text>
+                </Card>
+              </View>
+            </TouchableNativeFeedback>
+          ))
+        )}
       </ScrollView>
       <View style={{ backgroundColor: "#fff", flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
@@ -118,4 +132,14 @@ const styles = StyleSheet.create({
     marginTop: Constants.statusBarHeight,
   },
   scrollView: {},
+  titleStyle: {
+    fontSize: 18,
+    textAlign: "left",
+  },
+  textPriceDown: {
+    color: "red",
+  },
+  textPriceUp: {
+    color: "blue",
+  },
 });
