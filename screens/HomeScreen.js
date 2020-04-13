@@ -24,7 +24,7 @@ export default function HomeScreen() {
   }
   const [state, setstate] = useState({});
   useEffect(() => {
-    getIndexData();
+    // getIndexData();
   }, []);
   return (
     <View style={styles.container}>

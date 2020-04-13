@@ -9,7 +9,7 @@ import FundsScreen from "../screens/FundsScreen";
 import NewsScreen from "../screens/NewsScreen";
 
 const BottomTab = createBottomTabNavigator();
-const INITIAL_ROUTE_NAME = "Home";
+const INITIAL_ROUTE_NAME = "Starred Indices";
 
 export default function BottomTabNavigator({ navigation, route }) {
   // Set the header title on the parent stack navigator depending on the
