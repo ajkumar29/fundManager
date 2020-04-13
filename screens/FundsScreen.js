@@ -37,25 +37,28 @@ export default function FundScreen() {
   }
 
   function handleSubmit() {
-    if (fundUrl.trim() !== "") {
+    if (fundUrl.trim() !== "" && !urlList.includes(fundUrl)) {
       const newList = [...urlList];
       newList.push(fundUrl);
       setUrlList(newList);
       setIsLoading(true);
+    } else {
+      setFundUrl("");
     }
   }
 
   useEffect(() => {
-    console.log("here");
-    getFund(fundUrl)
-      .then((res) => {
-        let newData = [...data];
-        newData.push(res.data);
-        setData(newData);
-        setFundUrl("");
-      })
-      .then(setIsLoading(false))
-      .catch((err) => console.log("caught"));
+    if (fundUrl !== "") {
+      getFund(fundUrl)
+        .then((res) => {
+          let newData = [...data];
+          newData.push(res.data);
+          setData(newData);
+          setFundUrl("");
+        })
+        .then(setIsLoading(false))
+        .catch((err) => console.log("caught"));
+    }
   }, [urlList]);
 
   // useEffect(() => {
@@ -69,8 +72,6 @@ export default function FundScreen() {
   //   }
   //   setData(newData);
   // }, []);
-
-  console.log(data.length);
 
   return (
     <SafeAreaView style={styles.container}>
