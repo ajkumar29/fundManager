@@ -9,6 +9,7 @@ import {
   View,
   ScrollView,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { Input, Icon, ListItem } from "react-native-elements";
 import Constants from "expo-constants";
@@ -20,15 +21,15 @@ export default function FundScreen() {
   const [fundUrl, setFundUrl] = useState("");
   const [urlList, setUrlList] = useState([]);
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function getFund(link) {
     const fund = await axios("https://still-atoll-20317.herokuapp.com/fund", {
       headers: {
         Link: link,
-        // "https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/c/chelverton-uk-equity-growth-class-b-accumulation",
       },
     });
-    return fund.data;
+    return fund;
   }
 
   function handleChange(textValue) {
@@ -36,36 +37,52 @@ export default function FundScreen() {
   }
 
   function handleSubmit() {
-    if (fundUrl !== "") {
+    if (fundUrl.trim() !== "") {
       const newList = [...urlList];
       newList.push(fundUrl);
       setUrlList(newList);
-      getFund(fundUrl).then((res) => {
-        let newData = [...data];
-        newData.push(res);
-        setData(newData);
-        setFundUrl("");
-      });
+      setIsLoading(true);
     }
   }
 
   useEffect(() => {
-    console.log(urlList);
-    let newData = [...data];
-    for (let url in urlList) {
-      getFund(url).then((res) => {
-        newData.push(res);
-      });
-    }
-    setData(newData);
-  }, []);
+    console.log("here");
+    getFund(fundUrl)
+      .then((res) => {
+        let newData = [...data];
+        newData.push(res.data);
+        setData(newData);
+        setFundUrl("");
+      })
+      .then(setIsLoading(false))
+      .catch((err) => console.log("caught"));
+  }, [urlList]);
+
+  // useEffect(() => {
+  //   let newData = [...data];
+  //   for (let url in urlList) {
+  //     getFund(url)
+  //       .then((res) => {
+  //         newData.push(res);
+  //       })
+  //       .catch((err) => console.log(err));
+  //   }
+  //   setData(newData);
+  // }, []);
+
+  console.log(data.length);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
+        {isLoading && <ActivityIndicator size="large" color="#0000ff" />}
         {data.map((d, i) => (
           <View key={i}>
-            <ListItem title={d.name} subtitle={d.buyPrice} bottomDivider />
+            <ListItem
+              title={d.name}
+              subtitle={"Buy price: " + d.buyPrice}
+              bottomDivider
+            />
           </View>
         ))}
       </ScrollView>
