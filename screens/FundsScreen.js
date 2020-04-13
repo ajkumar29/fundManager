@@ -22,11 +22,13 @@ export default function FundScreen() {
   const [isOpen, setIsOpen] = useState(false);
 
   async function getFund(link) {
+    setFundUrl("");
     const fund = await axios("https://still-atoll-20317.herokuapp.com/fund", {
       headers: {
         Link: link,
       },
     });
+    setIsLoading(false);
     return fund;
   }
 
@@ -36,10 +38,10 @@ export default function FundScreen() {
 
   function handleSubmit() {
     if (fundUrl.trim() !== "" && !urlList.includes(fundUrl)) {
+      setIsLoading(true);
       const newList = [...urlList];
       newList.push(fundUrl);
       setUrlList(newList);
-      setIsLoading(true);
     } else {
       setFundUrl("");
     }
@@ -52,13 +54,10 @@ export default function FundScreen() {
           let newData = [...data];
           newData.push(res.data);
           setData(newData);
-          setFundUrl("");
         })
-        .then(setIsLoading(false))
         .catch((err) => console.log("caught"));
     }
   }, [urlList]);
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
