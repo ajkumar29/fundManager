@@ -19,7 +19,9 @@ export default function FundScreen() {
   const [urlList, setUrlList] = useState([]);
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [stockLoading, setStockLoading] = useState(false);
+  const [stockData, setStockData] = useState({});
+  const [openFund, setOpenFund] = useState({});
 
   async function getFund(link) {
     setFundUrl("");
@@ -30,6 +32,15 @@ export default function FundScreen() {
     });
     setIsLoading(false);
     return fund;
+  }
+
+  async function getStock(link) {
+    const stock = await axios("https://still-atoll-20317.herokuapp.com/stock", {
+      headers: {
+        Link: link,
+      },
+    });
+    return stock;
   }
 
   function handleChange(textValue) {
@@ -48,16 +59,51 @@ export default function FundScreen() {
   }
 
   useEffect(() => {
+    if (Object.keys(openFund).length > 0) {
+      const { holdings } = openFund;
+      let stocks = [];
+
+      //FIlter out the NOne URLs and push them to stock data first, then loop through all the URLS?
+      for (let holding in holdings) {
+        const { weight, linkToStockPage } = holdings[holding];
+        if (linkToStockPage !== "None") {
+          getStock(linkToStockPage)
+            .then((res) => {
+              stocks.push({
+                weight,
+                name: holding,
+                change: res.data.change,
+              });
+            })
+            .then(setStockData(stocks))
+            .catch((err) => console.group(err));
+        } else {
+          stocks.push({ weight, name: holding, change: "URL Not present" });
+          setStockData(stocks);
+        }
+      }
+    }
+    setStockLoading(false);
+  }, [openFund]);
+
+  console.log(stockData);
+  useEffect(() => {
     if (fundUrl !== "") {
       getFund(fundUrl)
         .then((res) => {
           let newData = [...data];
-          newData.push(res.data);
+          newData.push({ ...res.data });
           setData(newData);
         })
-        .catch((err) => console.log("caught"));
+        .catch((err) => console.log(err));
     }
   }, [urlList]);
+
+  function handleOverlayOpen(fund) {
+    setOpenFund(fund);
+    setStockLoading(true);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -65,14 +111,22 @@ export default function FundScreen() {
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           data.map((d, i) => (
-            <TouchableNativeFeedback onPress={() => setIsOpen(true)} key={i}>
+            <TouchableNativeFeedback
+              useForeground
+              onPress={() => handleOverlayOpen(d)}
+              key={i}
+            >
               <View>
                 <Overlay
-                  isVisible={isOpen}
-                  onBackdropPress={() => setIsOpen(false)}
+                  isVisible={Object.keys(openFund).length !== 0}
+                  onBackdropPress={() => setOpenFund({})}
                 >
                   <ScrollView>
-                    <Text>{JSON.stringify(d.holdings)}</Text>
+                    {stockLoading ? (
+                      <ActivityIndicator size="large" color="#00ff00" />
+                    ) : (
+                      <Text>{JSON.stringify(stockData)}</Text>
+                    )}
                   </ScrollView>
                 </Overlay>
                 <Card title={d.name} titleStyle={styles.titleStyle}>
