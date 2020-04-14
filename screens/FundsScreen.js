@@ -9,7 +9,14 @@ import {
   Text,
   TouchableNativeFeedback,
 } from "react-native";
-import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
+import {
+  Input,
+  Icon,
+  Overlay,
+  Card,
+  ListItem,
+  Header,
+} from "react-native-elements";
 import Constants from "expo-constants";
 
 import axios from "axios";
@@ -81,15 +88,16 @@ export default function FundScreen() {
         await Promise.all(promises)
           .then((res) => {
             for (let r in res) {
-              const { weight, name, result } = res[r];
-              const { change } = result.data;
-              stocks.push({ weight, name, change });
+              const { weight, result } = res[r];
+              const { name, change, changeDirection } = result.data;
+              stocks.push({ weight, name, change, changeDirection });
             }
           })
           .then(() => {
             setStockData(stocks);
             setStockLoading(false);
-          });
+          })
+          .catch((err) => console.log(err));
       }
       fetchStocks();
     }
@@ -112,8 +120,6 @@ export default function FundScreen() {
     setStockLoading(true);
   }
 
-  console.log(stockLoading);
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -131,25 +137,39 @@ export default function FundScreen() {
                   isVisible={Object.keys(openFund).length !== 0}
                   onBackdropPress={() => setOpenFund({})}
                 >
-                  <ScrollView>
-                    {stockLoading ? (
-                      <ActivityIndicator size="large" color="#00ff00" />
-                    ) : (
-                      stockData.map((stock, i) => (
-                        <ListItem
-                          key={i}
-                          title={stock.name}
-                          subtitle={
-                            <View>
-                              <Text>Weight: {stock.weight}</Text>
-                              <Text>Change: {stock.change}</Text>
-                            </View>
-                          }
-                          bottomDivider
-                        />
-                      ))
-                    )}
-                  </ScrollView>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.titleStyle}>Top 10 Holdings</Text>
+                    <ScrollView>
+                      {stockLoading ? (
+                        <ActivityIndicator size="large" color="#00ff00" />
+                      ) : (
+                        stockData.map((stock, i) => (
+                          <ListItem
+                            key={i}
+                            title={stock.name}
+                            subtitle={
+                              <View>
+                                <Text>Weight: {stock.weight}</Text>
+                                <Text
+                                  style={
+                                    stock.changeDirection === "-"
+                                      ? styles.textPriceDown
+                                      : styles.textPriceUp
+                                  }
+                                >
+                                  Change:{" "}
+                                  {stock.change !== "URL Not present"
+                                    ? stock.changeDirection + stock.change
+                                    : "No data"}
+                                </Text>
+                              </View>
+                            }
+                            bottomDivider
+                          />
+                        ))
+                      )}
+                    </ScrollView>
+                  </View>
                 </Overlay>
                 <Card title={d.name} titleStyle={styles.titleStyle}>
                   <Text
@@ -211,6 +231,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "left",
   },
+
   textPriceDown: {
     color: "red",
   },
