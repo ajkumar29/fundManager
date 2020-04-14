@@ -34,8 +34,8 @@ export default function FundScreen() {
     return fund;
   }
 
-  async function getStock(link) {
-    const stock = await axios("https://still-atoll-20317.herokuapp.com/stock", {
+  function getStock(link) {
+    const stock = axios("https://still-atoll-20317.herokuapp.com/stock", {
       headers: {
         Link: link,
       },
@@ -62,31 +62,40 @@ export default function FundScreen() {
     if (Object.keys(openFund).length > 0) {
       const { holdings } = openFund;
       let stocks = [];
-
-      //FIlter out the NOne URLs and push them to stock data first, then loop through all the URLS?
-      for (let holding in holdings) {
-        const { weight, linkToStockPage } = holdings[holding];
-        if (linkToStockPage !== "None") {
-          getStock(linkToStockPage)
-            .then((res) => {
-              stocks.push({
-                weight,
-                name: holding,
-                change: res.data.change,
-              });
-            })
-            .then(setStockData(stocks))
-            .catch((err) => console.group(err));
-        } else {
-          stocks.push({ weight, name: holding, change: "URL Not present" });
-          setStockData(stocks);
-        }
+      //to make useEffect async, you need to create a private async function and call it within useEffect
+      //
+      let promises = [];
+      async function fetchStocks() {
+        Object.keys(holdings).forEach((holding) => {
+          const { weight, linkToStockPage } = holdings[holding];
+          if (linkToStockPage !== "None") {
+            promises.push(
+              getStock(linkToStockPage).then((response) => {
+                return { weight, name: holding, result: response };
+              })
+            );
+          } else {
+            stocks.push({ weight, name: holding, change: "URL Not present" });
+          }
+        });
+        await Promise.all(promises)
+          .then((res) => {
+            for (let r in res) {
+              const { weight, name, result } = res[r];
+              const { change } = result.data;
+              stocks.push({ weight, name, change });
+            }
+          })
+          .then(() => {
+            setStockData(stocks);
+            setStockLoading(false);
+          });
+        // .then(setStockLoading(false));
       }
+      fetchStocks();
     }
-    setStockLoading(false);
   }, [openFund]);
 
-  console.log(stockData);
   useEffect(() => {
     if (fundUrl !== "") {
       getFund(fundUrl)
@@ -103,6 +112,8 @@ export default function FundScreen() {
     setOpenFund(fund);
     setStockLoading(true);
   }
+
+  console.log(stockLoading);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,7 +136,11 @@ export default function FundScreen() {
                     {stockLoading ? (
                       <ActivityIndicator size="large" color="#00ff00" />
                     ) : (
-                      <Text>{JSON.stringify(stockData)}</Text>
+                      Object.keys(stockData).map((stock) => (
+                        <Text key={stock}>
+                          {JSON.stringify(stockData[stock])}
+                        </Text>
+                      ))
                     )}
                   </ScrollView>
                 </Overlay>
