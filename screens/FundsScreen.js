@@ -9,7 +9,7 @@ import {
   Text,
   TouchableNativeFeedback,
 } from "react-native";
-import { Input, Icon, Overlay, Card } from "react-native-elements";
+import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
 import Constants from "expo-constants";
 
 import axios from "axios";
@@ -20,7 +20,7 @@ export default function FundScreen() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [stockLoading, setStockLoading] = useState(false);
-  const [stockData, setStockData] = useState({});
+  const [stockData, setStockData] = useState([]);
   const [openFund, setOpenFund] = useState({});
 
   async function getFund(link) {
@@ -90,7 +90,6 @@ export default function FundScreen() {
             setStockData(stocks);
             setStockLoading(false);
           });
-        // .then(setStockLoading(false));
       }
       fetchStocks();
     }
@@ -136,10 +135,18 @@ export default function FundScreen() {
                     {stockLoading ? (
                       <ActivityIndicator size="large" color="#00ff00" />
                     ) : (
-                      Object.keys(stockData).map((stock) => (
-                        <Text key={stock}>
-                          {JSON.stringify(stockData[stock])}
-                        </Text>
+                      stockData.map((stock, i) => (
+                        <ListItem
+                          key={i}
+                          title={stock.name}
+                          subtitle={
+                            <View>
+                              <Text>Weight: {stock.weight}</Text>
+                              <Text>Change: {stock.change}</Text>
+                            </View>
+                          }
+                          bottomDivider
+                        />
                       ))
                     )}
                   </ScrollView>
