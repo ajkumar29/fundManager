@@ -9,14 +9,7 @@ import {
   Text,
   TouchableNativeFeedback,
 } from "react-native";
-import {
-  Input,
-  Icon,
-  Overlay,
-  Card,
-  ListItem,
-  Header,
-} from "react-native-elements";
+import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
 import Constants from "expo-constants";
 
 import axios from "axios";
@@ -41,6 +34,7 @@ export default function FundScreen() {
     return fund;
   }
 
+  //intentially made to return a promise as it is resolved using Promise.all in the useEffect hook below
   function getStock(link) {
     const stock = axios("https://still-atoll-20317.herokuapp.com/stock", {
       headers: {
@@ -48,6 +42,13 @@ export default function FundScreen() {
       },
     });
     return stock;
+  }
+
+  async function getUserData() {
+    const userData = await axios(
+      "https://still-atoll-20317.herokuapp.com/fundDB"
+    );
+    return userData.data;
   }
 
   function handleChange(textValue) {
@@ -119,6 +120,12 @@ export default function FundScreen() {
     setOpenFund(fund);
     setStockLoading(true);
   }
+
+  useEffect(() => {
+    getUserData()
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
