@@ -14,17 +14,15 @@ import { MonoText } from "../components/StyledText";
 import axios from "axios";
 
 export default function HomeScreen() {
-  async function getIndexData(symbol = ".DJI") {
-    const index = await axios({
-      method: "GET",
-      url: `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=1min&apikey=0ICSYAL23FOER4AL&outputsize=full`,
-    });
-    console.log(index);
-    setstate(index);
+  async function getIndexData(symbol = "DJI") {
+    const index = await axios.get(
+      `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
+    );
+    return index;
   }
   const [state, setstate] = useState({});
   useEffect(() => {
-    // getIndexData();
+    getIndexData().then((res) => setstate(res.data));
   }, []);
   return (
     <View style={styles.container}>
@@ -33,7 +31,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.welcomeContainer}>
-          <Text>{Object.keys(state)}</Text>
+          <Text>{JSON.stringify(state)}</Text>
         </View>
       </ScrollView>
 
@@ -57,29 +55,6 @@ export default function HomeScreen() {
 HomeScreen.navigationOptions = {
   header: null,
 };
-
-function DevelopmentModeNotice() {
-  if (__DEV__) {
-    const learnMoreButton = (
-      <Text onPress={handleLearnMorePress} style={styles.helpLinkText}>
-        Learn more
-      </Text>
-    );
-
-    return (
-      <Text style={styles.developmentModeText}>
-        Development mode is enabled: your app will be slower but you can use
-        useful development tools. {learnMoreButton}
-      </Text>
-    );
-  } else {
-    return (
-      <Text style={styles.developmentModeText}>
-        You are not in development mode: your app will run at full speed.
-      </Text>
-    );
-  }
-}
 
 function handleLearnMorePress() {
   WebBrowser.openBrowserAsync(

@@ -3,7 +3,7 @@ import * as React from "react";
 
 import TabBarIcon from "../components/TabBarIcon";
 import HomeScreen from "../screens/HomeScreen";
-import LinksScreen from "../screens/LinksScreen";
+import LogScreen from "../screens/LogScreen";
 import AccountsScreen from "../screens/AccountsScreen";
 import FundsScreen from "../screens/FundsScreen";
 import NewsScreen from "../screens/NewsScreen";
@@ -50,10 +50,10 @@ export default function BottomTabNavigator({ navigation, route }) {
         }}
       />
       <BottomTab.Screen
-        name="Links2"
-        component={LinksScreen}
+        name="Log"
+        component={LogScreen}
         options={{
-          title: "Resources",
+          title: "Account log",
           tabBarIcon: ({ focused }) => (
             <TabBarIcon focused={focused} name="md-navigate" />
           ),
@@ -84,8 +84,8 @@ function getHeaderTitle(route) {
       return "Your Funds";
     case "Accounts":
       return "Your Accounts";
-    case "Links2":
-      return "Your tab4 ";
+    case "Log":
+      return "Your Account Log ";
     case "News":
       return "Stock News";
   }
