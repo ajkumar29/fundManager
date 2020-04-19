@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Text,
   TouchableNativeFeedback,
+  Picker,
+  PickerIOSItem,
 } from "react-native";
 import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
 import Constants from "expo-constants";
@@ -16,7 +18,6 @@ import axios from "axios";
 
 export default function HomeScreen() {
   async function getIndexData(symbol = "DJI") {
-    setSymbol("");
     const index = await axios.get(
       `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
     );
@@ -27,18 +28,34 @@ export default function HomeScreen() {
   const [symbol, setSymbol] = useState("");
   const [symbolList, setSymbolList] = useState([]);
   const [data, setData] = useState({});
+  const [openSymbol, setOpenSymbol] = useState("");
+
+  const idxSymbols = {
+    "FTSE 100": "FTSE",
+    "DOW JONES AVG": "DJI",
+    NASDAQ: "IXIC",
+    "XETRA DAX": "GDAXI",
+    "PARIS CAC 40": "FCHI",
+    "NIKKEI 225": "N225",
+    "HANG SENG": "HSI",
+  };
 
   function handleSubmit() {
-    // setIsLoading(true);
     setSymbolList(symbol);
+  }
+
+  function handleOpenOverlay(symbol) {
+    setOpenSymbol(symbol);
   }
 
   useEffect(() => {
     if (symbol) {
       getIndexData(symbol)
         .then((res) => {
+          const liveResult = res.data[0];
+          console.log(liveResult);
           const newData = { ...data };
-          newData[symbol] = res.data;
+          newData[symbol] = liveResult;
           setData(newData);
         })
         .catch((err) => console.log("didnt get index"));
@@ -48,36 +65,49 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        <TouchableNativeFeedback
-          useForeground
-          onPress={() => setIsLoading(true)}
-          key={"1"}
-        >
-          <View>
-            <Overlay
-              isVisible={isLoading}
-              onBackdropPress={() => setIsLoading(false)}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.titleStyle}>{JSON.stringify(data)}</Text>
-                <ScrollView>
-                  <ActivityIndicator size="large" color="#00ff00" />
-                </ScrollView>
-              </View>
-            </Overlay>
-            <Card title="index name" titleStyle={styles.titleStyle}></Card>
-          </View>
-        </TouchableNativeFeedback>
+        {Object.keys(data).map((d) => (
+          <TouchableNativeFeedback
+            useForeground
+            onPress={() => handleOpenOverlay(d)}
+            key={d}
+          >
+            <View>
+              <Overlay
+                isVisible={!!openSymbol}
+                onBackdropPress={() => setOpenSymbol("")}
+              >
+                <View style={{ flex: 1 }}>
+                  <ScrollView>
+                    <Text style={styles.titleStyle}>
+                      {JSON.stringify(data[openSymbol])}
+                    </Text>
+                  </ScrollView>
+                </View>
+              </Overlay>
+
+              <Card key={d} title={data[d].name} titleStyle={styles.titleStyle}>
+                <Text>{data[d].price}</Text>
+                <Text>{`${data[d].change} (${data[d].changesPercentage}%)`}</Text>
+              </Card>
+            </View>
+          </TouchableNativeFeedback>
+        ))}
       </ScrollView>
 
       <View style={{ backgroundColor: "#fff", flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
-          <Input
-            value={symbol}
-            onChangeText={(textValue) => setSymbol(textValue)}
-            placeholder="Index Symbol"
-            isFocused={true}
-          />
+          <Picker
+            selectedValue={symbol}
+            onValueChange={(itemValue, itemIndex) => setSymbol(itemValue)}
+          >
+            {Object.keys(idxSymbols).map((idxName) => (
+              <Picker.Item
+                key={idxName}
+                label={idxName}
+                value={idxSymbols[idxName]}
+              />
+            ))}
+          </Picker>
         </View>
         <Icon
           reverse
