@@ -1,56 +1,93 @@
 import * as WebBrowser from "expo-web-browser";
 import React, { useState, useEffect } from "react";
 import {
-  Image,
-  Platform,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  ScrollView,
+  SafeAreaView,
+  ActivityIndicator,
+  Text,
+  TouchableNativeFeedback,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
+import Constants from "expo-constants";
 
-import { MonoText } from "../components/StyledText";
 import axios from "axios";
 
 export default function HomeScreen() {
-  async function getIndexData(symbol = ".DJI") {
-    const index = await axios({
-      method: "GET",
-      url: `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=1min&apikey=0ICSYAL23FOER4AL&outputsize=full`,
-    });
-    console.log(index);
-    setstate(index);
+  async function getIndexData(symbol = "DJI") {
+    setSymbol("");
+    const index = await axios.get(
+      `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
+    );
+    // setIsLoading(false);
+    return index;
   }
-  const [state, setstate] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [symbol, setSymbol] = useState("");
+  const [symbolList, setSymbolList] = useState([]);
+  const [data, setData] = useState({});
+
+  function handleSubmit() {
+    // setIsLoading(true);
+    setSymbolList(symbol);
+  }
+
   useEffect(() => {
-    getIndexData();
-  }, []);
+    if (symbol) {
+      getIndexData(symbol)
+        .then((res) => {
+          const newData = { ...data };
+          newData[symbol] = res.data;
+          setData(newData);
+        })
+        .catch((err) => console.log("didnt get index"));
+    }
+  }, [symbolList]);
+
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <View style={styles.welcomeContainer}>
-          <Text>{Object.keys(state)}</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <TouchableNativeFeedback
+          useForeground
+          onPress={() => setIsLoading(true)}
+          key={"1"}
+        >
+          <View>
+            <Overlay
+              isVisible={isLoading}
+              onBackdropPress={() => setIsLoading(false)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.titleStyle}>{JSON.stringify(data)}</Text>
+                <ScrollView>
+                  <ActivityIndicator size="large" color="#00ff00" />
+                </ScrollView>
+              </View>
+            </Overlay>
+            <Card title="index name" titleStyle={styles.titleStyle}></Card>
+          </View>
+        </TouchableNativeFeedback>
       </ScrollView>
 
-      <View style={styles.tabBarInfoContainer}>
-        <Text style={styles.tabBarInfoText}>
-          This is a tab bar. You can edit it in:
-        </Text>
-
-        <View
-          style={[styles.codeHighlightContainer, styles.navigationFilename]}
-        >
-          <MonoText style={styles.codeHighlightText}>
-            navigation/BottomTabNavigator.js
-          </MonoText>
+      <View style={{ backgroundColor: "#fff", flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <Input
+            value={symbol}
+            onChangeText={(textValue) => setSymbol(textValue)}
+            placeholder="Index Symbol"
+            isFocused={true}
+          />
         </View>
+        <Icon
+          reverse
+          name="done"
+          type="material"
+          color="#517fa4"
+          onPress={handleSubmit}
+        />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -58,126 +95,21 @@ HomeScreen.navigationOptions = {
   header: null,
 };
 
-function DevelopmentModeNotice() {
-  if (__DEV__) {
-    const learnMoreButton = (
-      <Text onPress={handleLearnMorePress} style={styles.helpLinkText}>
-        Learn more
-      </Text>
-    );
-
-    return (
-      <Text style={styles.developmentModeText}>
-        Development mode is enabled: your app will be slower but you can use
-        useful development tools. {learnMoreButton}
-      </Text>
-    );
-  } else {
-    return (
-      <Text style={styles.developmentModeText}>
-        You are not in development mode: your app will run at full speed.
-      </Text>
-    );
-  }
-}
-
-function handleLearnMorePress() {
-  WebBrowser.openBrowserAsync(
-    "https://docs.expo.io/versions/latest/workflow/development-mode/"
-  );
-}
-
-function handleHelpPress() {
-  WebBrowser.openBrowserAsync(
-    "https://docs.expo.io/versions/latest/get-started/create-a-new-app/#making-your-first-change"
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    marginTop: Constants.statusBarHeight,
   },
-  developmentModeText: {
-    marginBottom: 20,
-    color: "rgba(0,0,0,0.4)",
-    fontSize: 14,
-    lineHeight: 19,
-    textAlign: "center",
+  scrollView: {},
+  titleStyle: {
+    fontSize: 18,
+    textAlign: "left",
   },
-  contentContainer: {
-    paddingTop: 30,
+
+  textPriceDown: {
+    color: "red",
   },
-  welcomeContainer: {
-    alignItems: "center",
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  welcomeImage: {
-    width: 100,
-    height: 80,
-    resizeMode: "contain",
-    marginTop: 3,
-    marginLeft: -10,
-  },
-  getStartedContainer: {
-    alignItems: "center",
-    marginHorizontal: 50,
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-  codeHighlightText: {
-    color: "rgba(96,100,109, 0.8)",
-  },
-  codeHighlightContainer: {
-    backgroundColor: "rgba(0,0,0,0.05)",
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    color: "rgba(96,100,109, 1)",
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  tabBarInfoContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: "black",
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-    alignItems: "center",
-    backgroundColor: "#fbfbfb",
-    paddingVertical: 20,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: "rgba(96,100,109, 1)",
-    textAlign: "center",
-  },
-  navigationFilename: {
-    marginTop: 5,
-  },
-  helpContainer: {
-    marginTop: 15,
-    alignItems: "center",
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    fontSize: 14,
-    color: "#2e78b7",
+  textPriceUp: {
+    color: "blue",
   },
 });
