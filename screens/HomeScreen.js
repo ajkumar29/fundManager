@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import * as moment from "moment";
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   Text,
   TouchableNativeFeedback,
   Picker,
-  PickerIOSItem,
 } from "react-native";
 import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
 import Constants from "expo-constants";
@@ -41,6 +41,7 @@ export default function HomeScreen() {
   };
 
   function handleSubmit() {
+    setIsLoading(true);
     setSymbolList(symbol);
   }
 
@@ -55,8 +56,10 @@ export default function HomeScreen() {
           const liveResult = res.data[0];
           console.log(liveResult);
           const newData = { ...data };
+          console.log(symbol);
           newData[symbol] = liveResult;
           setData(newData);
+          setIsLoading(false);
         })
         .catch((err) => console.log("didnt get index"));
     }
@@ -65,33 +68,75 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {Object.keys(data).map((d) => (
-          <TouchableNativeFeedback
-            useForeground
-            onPress={() => handleOpenOverlay(d)}
-            key={d}
-          >
-            <View>
-              <Overlay
-                isVisible={!!openSymbol}
-                onBackdropPress={() => setOpenSymbol("")}
-              >
-                <View style={{ flex: 1 }}>
-                  <ScrollView>
-                    <Text style={styles.titleStyle}>
-                      {JSON.stringify(data[openSymbol])}
-                    </Text>
-                  </ScrollView>
-                </View>
-              </Overlay>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          Object.keys(data).map((d) => (
+            <TouchableNativeFeedback
+              useForeground
+              onPress={() => handleOpenOverlay(d)}
+              key={d}
+            >
+              <View>
+                <Overlay
+                  isVisible={!!openSymbol}
+                  onBackdropPress={() => setOpenSymbol("")}
+                >
+                  <View style={{ flex: 1 }}>
+                    <ScrollView>
+                      {openSymbol && (
+                        <View>
+                          <Text style={styles.titleStyle}>
+                            {data[openSymbol].name}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            {data[openSymbol].price}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            {`${data[openSymbol].change} (${data[openSymbol].changesPercentage}%)`}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Day Low: {data[openSymbol].dayLow}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Day High: {data[openSymbol].dayHigh}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Year Low: {data[openSymbol].yearLow}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Year High: {data[openSymbol].yearHigh}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Open: {data[openSymbol].open}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Prev Close: {data[openSymbol].previousClose}
+                          </Text>
+                          <Text style={styles.titleStyle}>
+                            Last Updated:{" "}
+                            {moment
+                              .unix(data[openSymbol].timestamp)
+                              .format("MMMM Do YYYY, h:mm a")}
+                          </Text>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                </Overlay>
 
-              <Card key={d} title={data[d].name} titleStyle={styles.titleStyle}>
-                <Text>{data[d].price}</Text>
-                <Text>{`${data[d].change} (${data[d].changesPercentage}%)`}</Text>
-              </Card>
-            </View>
-          </TouchableNativeFeedback>
-        ))}
+                <Card
+                  key={d}
+                  title={data[d].name}
+                  titleStyle={styles.titleStyle}
+                >
+                  <Text>{data[d].price}</Text>
+                  <Text>{`${data[d].change} (${data[d].changesPercentage}%)`}</Text>
+                </Card>
+              </View>
+            </TouchableNativeFeedback>
+          ))
+        )}
       </ScrollView>
 
       <View style={{ backgroundColor: "#fff", flexDirection: "row" }}>
