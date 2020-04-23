@@ -11,24 +11,36 @@ import {
   TouchableNativeFeedback,
   Picker,
 } from "react-native";
-import { Input, Icon, Overlay, Card, ListItem } from "react-native-elements";
+import { Icon, Overlay, Card } from "react-native-elements";
 import Constants from "expo-constants";
 
 import axios from "axios";
+import socket from "../socketConnection";
 
 export default function HomeScreen() {
   async function getIndexData(symbol = "DJI") {
     const index = await axios.get(
-      `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
+      // `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
+      `http://192.168.0.20:8080/marketData/${symbol}`
     );
     // setIsLoading(false);
     return index;
   }
+
   const [isLoading, setIsLoading] = useState(false);
   const [symbol, setSymbol] = useState("");
-  const [symbolList, setSymbolList] = useState([]);
   const [data, setData] = useState({});
   const [openSymbol, setOpenSymbol] = useState("");
+  const [symbolList, setSymbolList] = useState([]);
+
+  useEffect(() => {
+    socket.emit("updateList", symbolList);
+    socket.emit("getLiveData");
+    socket.on("liveData", (res) => console.log(res));
+    return () => {
+      socket.off("liveData");
+    };
+  }, []);
 
   const idxSymbols = {
     "FTSE 100": "FTSE",
@@ -41,8 +53,12 @@ export default function HomeScreen() {
   };
 
   function handleSubmit() {
-    setIsLoading(true);
-    setSymbolList(symbol);
+    if (!symbolList.includes(symbol)) {
+      setIsLoading(true);
+      let newList = [...symbolList];
+      newList.push(symbol);
+      setSymbolList(newList);
+    }
   }
 
   function handleOpenOverlay(symbol) {
@@ -51,17 +67,16 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (symbol) {
+      socket.emit("updateList", symbolList);
       getIndexData(symbol)
         .then((res) => {
           const liveResult = res.data[0];
-          console.log(liveResult);
           const newData = { ...data };
-          console.log(symbol);
           newData[symbol] = liveResult;
           setData(newData);
           setIsLoading(false);
         })
-        .catch((err) => console.log("didnt get index"));
+        .catch((err) => console.log("didnt get index: " + err));
     }
   }, [symbolList]);
 
