@@ -86,19 +86,14 @@ export default function FundScreen() {
             stocks.push({ weight, name: holding, change: "URL Not present" });
           }
         });
-        await Promise.all(promises)
-          .then((res) => {
-            for (let r in res) {
-              const { weight, result } = res[r];
-              const { name, change, changeDirection } = result.data;
-              stocks.push({ weight, name, change, changeDirection });
-            }
-          })
-          .then(() => {
-            setStockData(stocks);
-            setStockLoading(false);
-          })
-          .catch((err) => console.log(err));
+        const res = await Promise.all(promises);
+        for (let r in res) {
+          const { weight, result } = res[r];
+          const { name, change, changeDirection } = result.data;
+          stocks.push({ weight, name, change, changeDirection });
+        }
+        setStockData(stocks);
+        setStockLoading(false);
       }
       fetchStocks();
     }
@@ -126,6 +121,18 @@ export default function FundScreen() {
       .then((res) => console.log(res))
       .catch((err) => console.log(err));
   }, []);
+
+  const renderChangeText = (changeDirection, change) => {
+    if (change !== "URL Not present") {
+      if (change == "No change") {
+        return change;
+      } else {
+        return changeDirection + change;
+      }
+    } else {
+      return "No data";
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -165,9 +172,10 @@ export default function FundScreen() {
                                   }
                                 >
                                   Change:{" "}
-                                  {stock.change !== "URL Not present"
-                                    ? stock.changeDirection + stock.change
-                                    : "No data"}
+                                  {renderChangeText(
+                                    stock.changeDirection,
+                                    stock.change
+                                  )}
                                 </Text>
                               </View>
                             }
