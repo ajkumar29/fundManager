@@ -38,7 +38,6 @@ export default function HomeScreen() {
     socket.emit("updateList", symbolList);
     socket.emit("getLiveData");
     socket.on("liveData", (res) => {
-      console.log(res);
       setData(res);
       setIsLoading(false);
     });
@@ -73,6 +72,17 @@ export default function HomeScreen() {
   useEffect(() => {
     console.log(openSymbol);
     console.log(data);
+
+    Object.keys(data).forEach((idxName) => {
+      let newHistoryData = { ...historyData };
+      if (newHistoryData[idxName]) {
+        newHistoryData[idxName] = [...newHistoryData[idxName], data[idxName]];
+      } else {
+        newHistoryData[idxName] = [data[idxName]];
+      }
+      console.log("new history: ", newHistoryData);
+      setHistoryData(newHistoryData);
+    });
   }, [data]);
 
   useEffect(() => {
@@ -135,6 +145,11 @@ export default function HomeScreen() {
                               .unix(data[openSymbol].timestamp)
                               .format("MMMM Do YYYY, h:mm:ss a")}
                           </Text>
+                          <Card>
+                            <Text>
+                              {JSON.stringify(historyData[openSymbol])}
+                            </Text>
+                          </Card>
                         </View>
                       )}
                     </ScrollView>
