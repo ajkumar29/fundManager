@@ -21,7 +21,7 @@ export default function HomeScreen() {
   async function getIndexData(symbol = "DJI") {
     const index = await axios.get(
       // `https://still-atoll-20317.herokuapp.com/marketData/${symbol}`
-      `http://192.168.0.20:8080/marketData/${symbol}`
+      `http://192.168.0.22:8080/marketData/${symbol}`
     );
     // setIsLoading(false);
     return index;
@@ -29,14 +29,19 @@ export default function HomeScreen() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [symbol, setSymbol] = useState("");
-  const [data, setData] = useState({});
+  const [historyData, setHistoryData] = useState({});
   const [openSymbol, setOpenSymbol] = useState("");
   const [symbolList, setSymbolList] = useState([]);
+  const [data, setData] = useState({});
 
   useEffect(() => {
     socket.emit("updateList", symbolList);
     socket.emit("getLiveData");
-    socket.on("liveData", (res) => console.log(res));
+    socket.on("liveData", (res) => {
+      console.log(res);
+      setData(res);
+      setIsLoading(false);
+    });
     return () => {
       socket.off("liveData");
     };
@@ -66,20 +71,16 @@ export default function HomeScreen() {
   }
 
   useEffect(() => {
+    console.log(openSymbol);
+    console.log(data);
+  }, [data]);
+
+  useEffect(() => {
     if (symbol) {
       socket.emit("updateList", symbolList);
-      getIndexData(symbol)
-        .then((res) => {
-          const liveResult = res.data[0];
-          const newData = { ...data };
-          newData[symbol] = liveResult;
-          setData(newData);
-          setIsLoading(false);
-        })
-        .catch((err) => console.log("didnt get index: " + err));
     }
   }, [symbolList]);
-
+  console.log(openSymbol);
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -132,7 +133,7 @@ export default function HomeScreen() {
                             Last Updated:{" "}
                             {moment
                               .unix(data[openSymbol].timestamp)
-                              .format("MMMM Do YYYY, h:mm a")}
+                              .format("MMMM Do YYYY, h:mm:ss a")}
                           </Text>
                         </View>
                       )}
@@ -140,11 +141,7 @@ export default function HomeScreen() {
                   </View>
                 </Overlay>
 
-                <Card
-                  key={d}
-                  title={data[d].name}
-                  titleStyle={styles.titleStyle}
-                >
+                <Card key={d} title={d} titleStyle={styles.titleStyle}>
                   <Text>{data[d].price}</Text>
                   <Text>{`${data[d].change} (${data[d].changesPercentage}%)`}</Text>
                 </Card>
