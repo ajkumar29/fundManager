@@ -27,12 +27,21 @@ export default function HomeScreen() {
     return index;
   }
 
+  async function getHistoricalData(symbol) {
+    const historyData = await axios.get(
+      `http://192.168.0.22:8080/marketData/${symbol}`
+    );
+    return historyData;
+  }
+
   const [isLoading, setIsLoading] = useState(false);
   const [symbol, setSymbol] = useState("");
   const [historyData, setHistoryData] = useState({});
   const [openSymbol, setOpenSymbol] = useState("");
   const [symbolList, setSymbolList] = useState([]);
   const [data, setData] = useState({});
+
+  const [historicalData, setHistoricalData] = useState([]);
 
   useEffect(() => {
     socket.emit("updateList", symbolList);
@@ -41,8 +50,14 @@ export default function HomeScreen() {
       setData(res);
       setIsLoading(false);
     });
+    socket.on("liveHistoricalData", (res) => {
+      console.log("historyDataaaa");
+      setHistoricalData(res);
+    });
+
     return () => {
       socket.off("liveData");
+      socket.off("liveHistoricalData");
     };
   }, []);
 
@@ -70,9 +85,12 @@ export default function HomeScreen() {
   }
 
   useEffect(() => {
-    console.log(openSymbol);
-    console.log(data);
+    if (openSymbol !== "") {
+      socket.emit("updateOpenModal", idxSymbols[openSymbol]);
+    }
+  }, [openSymbol]);
 
+  useEffect(() => {
     Object.keys(data).forEach((idxName) => {
       let newHistoryData = { ...historyData };
       if (newHistoryData[idxName]) {
@@ -80,7 +98,6 @@ export default function HomeScreen() {
       } else {
         newHistoryData[idxName] = [data[idxName]];
       }
-      console.log("new history: ", newHistoryData);
       setHistoryData(newHistoryData);
     });
   }, [data]);
@@ -90,7 +107,7 @@ export default function HomeScreen() {
       socket.emit("updateList", symbolList);
     }
   }, [symbolList]);
-  console.log(openSymbol);
+  console.log(historicalData);
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -146,9 +163,7 @@ export default function HomeScreen() {
                               .format("MMMM Do YYYY, h:mm:ss a")}
                           </Text>
                           <Card>
-                            <Text>
-                              {JSON.stringify(historyData[openSymbol])}
-                            </Text>
+                            <Text>{historicalData.length}</Text>
                           </Card>
                         </View>
                       )}
